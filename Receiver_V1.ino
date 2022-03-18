@@ -53,7 +53,7 @@ digitalWrite(motor_pin, LOW);
 
 void loop() {
 if (radio.available()){              //Looking for the data.
-    //radio.read(&button_value, sizeof(button_value));    //Reading the data
+    radio.read(&data, sizeof(data));    //Reading the data
     if(data[0]==501) { //if checking to see if data was sent from first transmitter
        data1 = data[1]; //set data from first transmitter to data given
        button_value1 = data1; //set button value to data transmitted
