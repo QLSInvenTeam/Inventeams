@@ -18,7 +18,7 @@ const byte address[1] = "00002";     //Byte of array representing the address. T
 int button_pin = 3;
 float data[4]; //data from transmitters
 boolean button_state = LOW;
-int button_value = 0;
+int button_value1 = 0;
 int testPin = 2;
 void setup() {
   pinMode(button_pin, INPUT);
@@ -43,8 +43,8 @@ void loop() {
   data[0] = 501; //storing "header" to distinguish transmitters
   //Serial.println(button_value);
   if (button_state == HIGH) {
-    button_value = 1;
-    data[1] = button_value; //setting value in data array to button value for receiver
+    button_value1 = 1;
+    data[1] = button_value1; //setting value in data array to button value for receiver
     int time = millis();
     //radio.write(&button_value, sizeof(button_value));
     //Sending the message to receiver
@@ -55,8 +55,8 @@ void loop() {
     //digitalWrite(testPin, HIGH);
   }
   else {
-    button_value = 0;
-    data[1] = button_value; //setting value in data array to button value for receiver
+    button_value1 = 0;
+    data[1] = button_value1; //setting value in data array to button value for receiver
     //radio.write(&button_value, sizeof(button_value));
     //Serial.println("not pressed");
     //const char text[] = "Your Button State is LOW";
