@@ -41,10 +41,10 @@ void setup() {
 void loop() {
   button_state = digitalRead(button_pin);
   data[0] = 601;
-  data[1] = button_state;
   //Serial.println(button_value);
   if (button_state == HIGH) {
     button_value = 1;
+    data[1] = button_value;
     int time = millis();
     radio.write(&button_value, sizeof(button_value));
     //Sending the message to receiver
@@ -56,7 +56,7 @@ void loop() {
   }
   else {
     button_value = 0;
-
+    data[1] = button_value;
     radio.write(&button_value, sizeof(button_value));
     //Serial.println("not pressed");
     //const char text[] = "Your Button State is LOW";
