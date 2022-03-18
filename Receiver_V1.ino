@@ -63,7 +63,8 @@ if (radio.available()){              //Looking for the data.
        button_value2 = data2; //set button value to data transmitted
     }
     //Serial.println(button_value);
-    Serial.println(button_value);
+    Serial.println(button_value1);
+    Serial.println(button_value2);
     //if checking both button values since either can be 1 for motor to buzz
     if(button_value1 == 1 || button_value2==1){
       digitalWrite(motor_pin, HIGH);
@@ -72,7 +73,8 @@ if (radio.available()){              //Looking for the data.
       //set both to 0 to avoid overloading and delay
       button_value1 = 0;
       button_value2 = 0;
-      Serial.println(button_value);
+      Serial.println(button_value1);
+      Serial.println(button_value2);
     }
     //weird if covered for both values
     else if(button_value1 == 28505 || button_value2 == 28505){
