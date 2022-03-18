@@ -16,6 +16,7 @@ int ce = 7;
 RF24 radio(ce, csn); // CE, CSN
 const byte address[1] = "00002";     //Byte of array representing the address. This is the address where we will send the data. This should be same on the receiving side.
 int button_pin = 3;
+float data[4];
 boolean button_state = LOW;
 int button_value = 0;
 int testPin = 2;
@@ -39,6 +40,8 @@ void setup() {
 }
 void loop() {
   button_state = digitalRead(button_pin);
+  data[0] = 501;
+  data[1] = button_state;
   //Serial.println(button_value);
   if (button_state == HIGH) {
     button_value = 1;
