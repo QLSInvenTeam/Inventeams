@@ -46,7 +46,7 @@ void loop() {
     button_value2 = 1;
     data[1] = button_value2;
     int time = millis();
-    //radio.write(&button_value, sizeof(button_value));
+    radio.write(&data, sizeof(data));
     //Sending the message to receiver
     delay(1000);
     //Serial.println("pressed");
@@ -57,7 +57,7 @@ void loop() {
   else {
     button_value2 = 0;
     data[1] = button_value2;
-    //radio.write(&button_value, sizeof(button_value));
+    radio.write(&data, sizeof(data));
     //Serial.println("not pressed");
     //const char text[] = "Your Button State is LOW";
     //radio.write(&text, sizeof(text));
