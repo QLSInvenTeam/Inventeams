@@ -15,6 +15,7 @@ RF24 radio(7, 8); // CE, CSN
 const byte address[1] = "00002"; //radio 'channel'
 boolean button_state = 0;
 int motor_pin = 2;
+
 int button_value1 = 0; //store button value given by first transmitter
 int button_value2 = 0; //store button value given by second transmitter
 int led_unavailable = 5;
@@ -36,6 +37,7 @@ radio.startListening();              //This sets the module as receiver
 
 pinMode(csn, HIGH); 
 pinMode(ce, HIGH);
+
 
 //Initialization Sequence//
 digitalWrite(led_unavailable, HIGH);
