@@ -139,6 +139,7 @@ void loop() {
   if(button_state == HIGH) {
     button_value = 1;
     rf69.send(&button_value, sizeof(button_value));
+    delay(1000);
   }
   else {
     button_value = 0;
