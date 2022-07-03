@@ -133,9 +133,9 @@ void setup()
 void loop() {
   button_state = digitalRead(button_pin);
   //delay(1000);  // Wait 1 second between transmits, could also 'sleep' here!
-  char radiopacket[20] = "Hello World #";
-  itoa(packetnum++, radiopacket+13, 10);
-  Serial.print("Sending "); Serial.println(radiopacket);
+  //char radiopacket[20] = "Hello World #";
+  //itoa(packetnum++, radiopacket+13, 10);
+  //Serial.print("Sending "); Serial.println(radiopacket);
   if(button_state == HIGH) {
     button_value = 1;
     rf69.send(&button_value, sizeof(button_value));
@@ -150,20 +150,20 @@ void loop() {
   //rf69.waitPacketSent();
   
   // Now wait for a reply
-  uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
-  uint8_t len = sizeof(buf);
-  if (rf69.waitAvailableTimeout(500))  { 
+ // uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
+ // uint8_t len = sizeof(buf);
+ // if (rf69.waitAvailableTimeout(500))  { 
     // Should be a reply message for us now   
-    if (rf69.recv(buf, &len)) {
-      Serial.print("Got a reply: ");
-      Serial.println((char*)buf);
-      Blink(LED, 50, 3); //blink LED 3 times, 50ms between blinks
-    } else {
-      Serial.println("Receive failed");
-    }
-  } else {
-    Serial.println("No reply, is another RFM69 listening?");
-  }
+   // if (rf69.recv(buf, &len)) {
+     // Serial.print("Got a reply: ");
+     // Serial.println((char*)buf);
+     // Blink(LED, 50, 3); //blink LED 3 times, 50ms between blinks
+    //} else {
+    //  Serial.println("Receive failed");
+   // }
+ // } else {
+    //Serial.println("No reply, is another RFM69 listening?");
+  //}
 }
 
 void Blink(byte PIN, byte DELAY_MS, byte loops) {
