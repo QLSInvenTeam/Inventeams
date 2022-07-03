@@ -80,7 +80,6 @@
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 uint8_t button_pin = 3;
-uint8_t button_value = 0;
 boolean button_state = LOW;
 int16_t packetnum = 0;  // packet counter, we increment per xmission
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
@@ -143,7 +142,7 @@ void loop() {
   }
   else {
    buf[0] = 0;
-    rf69.send(&buf, sizeof(buf));
+   rf69.send(&buf, sizeof(buf));
   }
   // Send a message!
   //rf69.send((uint8_t *)radiopacket, strlen(radiopacket));
