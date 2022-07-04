@@ -1,13 +1,3 @@
-// rf69 demo tx rx.pde
-// -*- mode: C++ -*-
-// Example sketch showing how to create a simple messageing client
-// with the RH_RF69 class. RH_RF69 class does not provide for addressing or
-// reliability, so you should only use RH_RF69  if you do not need the higher
-// level messaging abilities.
-// It is designed to work with the other example rf69_server.
-// Demonstrates the use of AES encryption, setting the frequency and modem 
-// configuration
-
 #include <SPI.h>
 #include <RH_RF69.h>
 
@@ -22,12 +12,12 @@
   #define RFM69_CS      8
   #define RFM69_INT     3
   #define RFM69_RST     4
-  #define LED           13
+  #define LED           2
 #endif
 
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
-uint8_t motor_pin = 2;
+uint8_t motor_pin = 13;
 uint8_t led_unavailable = 5;
 uint8_t button_value = 0;
 int16_t packetnum = 0;  // packet counter, we increment per xmission
@@ -79,18 +69,13 @@ void setup()
 
 void loop() {
  if (rf69.available()) {
-    // Should be a message for us now   
-    uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
-    uint8_t len = sizeof(buf);
-    if (rf69.recv(buf, &len)) {
+    // Should be a message for us now
+    uint8_t button_value;   
+    uint8_t len = sizeof(button_value);
+    if (rf69.recv(&button_value, &len)) {
       if (!len) return;
-      button_value = buf[0];
       if(button_value == 1) {
         digitalWrite(motor_pin, HIGH);
-        delay(1000);
-        digitalWrite(motor_pin,LOW);
-        button_value = 0;
-        Serial.println(button_value);
       }
       else {
         digitalWrite(motor_pin, LOW);
@@ -99,7 +84,7 @@ void loop() {
       Serial.print("Received [");
       Serial.print(len);
       Serial.print("]: ");
-      Serial.println((char*)buf);
+      Serial.println(button_value);
       Serial.print("RSSI: ");
       Serial.println(rf69.lastRssi(), DEC);
 
@@ -120,13 +105,4 @@ void loop() {
   }
   delay(10);
 }
-
-
-void Blink(byte PIN, byte DELAY_MS, byte loops) {
-  for (byte i=0; i<loops; i++)  {
-    digitalWrite(PIN,HIGH);
-    delay(DELAY_MS);
-    digitalWrite(PIN,LOW);
-    delay(DELAY_MS);
-  }
 }
