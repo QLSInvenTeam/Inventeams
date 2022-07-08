@@ -76,7 +76,7 @@ void loop() {
     if (rf69.recv(&transmittertime, &len)) {
       if (!len) return;
       if(transmittertime!=0) {
-        Serial.print( (receivertime) - (int)(transmittertime)) + " milliseconds");
+        Serial.print("delay: " +  (receivertime) - (int)(transmittertime)) + " milliseconds");
       }
       digitalWrite(led_unavailable, LOW);
      // Serial.print("Received [");
