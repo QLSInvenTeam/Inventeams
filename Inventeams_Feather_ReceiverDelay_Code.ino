@@ -75,14 +75,16 @@ void loop() {
     uint8_t len = sizeof(transmittertime);
     if (rf69.recv(&transmittertime, &len)) {
       if (!len) return;
-      Serial.print(transmittertime - receivertime);
+      if(transmittertime!=0) {
+        Serial.print( ((int)(transmittertime) - receivertime) + " milliseconds");
+      }
       digitalWrite(led_unavailable, LOW);
-      Serial.print("Received [");
-      Serial.print(len);
-      Serial.print("]: ");
-      Serial.println(button_value);
-      Serial.print("RSSI: ");
-      Serial.println(rf69.lastRssi(), DEC);
+     // Serial.print("Received [");
+     // Serial.print(len);
+     // Serial.print("]: ");
+      //Serial.println(button_value);
+      //Serial.print("RSSI: ");
+      //Serial.println(rf69.lastRssi(), DEC);
 
       //if (strstr((char *)buf, "Hello World")) {
         // Send a reply!
