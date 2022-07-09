@@ -78,7 +78,8 @@ void loop() {
   //delay(1000);  // Wait 1 second between transmits, could also 'sleep' here!
   if(button_state == HIGH) {
     int curtime = millis();
-    rf69.send(&curtime, sizeof(curtime));
+    uint8_t convert = curtime;
+    rf69.send(&convert, sizeof(convert));
   }
   else {
     button_value = 0;
