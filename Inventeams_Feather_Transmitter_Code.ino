@@ -5,7 +5,8 @@
 
 // Change to 434.0 or other frequency, must match RX's freq!
 #define RF69_FREQ 915.0
-  
+#define VBATPIN A0
+float vbatm = 0;
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
   // Feather M0 w/Radio
   #define RFM69_CS      8
@@ -71,6 +72,12 @@ void setup()
 
 
 void loop() {
+  vbatm = analogRead(VBATPIN);
+  vbatm*=2;
+  vbatm*=3.3;
+  vbatm/=1024;
+  Serial.print("Voltage: ");
+  Serial.println(vbatm);
   button_state = digitalRead(button_pin);
   //delay(1000);  // Wait 1 second between transmits, could also 'sleep' here!
   //char radiopacket[20] = "Hello World #";
