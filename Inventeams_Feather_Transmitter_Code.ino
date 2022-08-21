@@ -28,9 +28,6 @@ void setup()
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
-  Serial.println("Feather RFM69 TX Test!");
-  Serial.println();
-
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
   digitalWrite(RFM69_RST, LOW);
@@ -40,7 +37,6 @@ void setup()
     Serial.println("RFM69 radio init failed");
     while (1);
   }
-  Serial.println("RFM69 radio init OK!");
  
   if (!rf69.setFrequency(RF69_FREQ)) {
     Serial.println("setFrequency failed");
