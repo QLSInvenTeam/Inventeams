@@ -26,7 +26,7 @@ int16_t packetnum = 0;  // packet counter, we increment per xmission
 void setup() 
 {
   Serial.begin(115200);
-  //while (!Serial) { delay(1); } // wait until serial console is open, remove if not tethered to computer
+
 
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
@@ -35,7 +35,6 @@ void setup()
   Serial.println("Feather RFM69 RX Test!");
   Serial.println();
 
-  // manual reset
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
   digitalWrite(RFM69_RST, LOW);
@@ -45,26 +44,19 @@ void setup()
     Serial.println("RFM69 radio init failed");
     while (1);
   }
-  Serial.println("RFM69 radio init OK!");
-  
-  // Defaults after init are 434.0MHz, modulation GFSK_Rb250Fd250, +13dbM (for low power module)
-  // No encryption
+
   if (!rf69.setFrequency(RF69_FREQ)) {
     Serial.println("setFrequency failed");
   }
 
-  // If you are using a high power RF69 eg RFM69HW, you *must* set a Tx power with the
-  // ishighpowermodule flag set like this:
-  rf69.setTxPower(20, true);  // range from 14-20 for power, 2nd arg must be true for 69HCW
+  rf69.setTxPower(20, true);  
 
-  // The encryption key has to be the same as the one in the server
+
   uint8_t key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
   rf69.setEncryptionKey(key);
   
   pinMode(LED, OUTPUT);
-
-  Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 }
 
 
@@ -76,7 +68,6 @@ void loop() {
   Serial.print("Voltage: ");
   Serial.println(vbatm);
  if (rf69.available()) {
-    // Should be a message for us now
     uint8_t button_value;   
     uint8_t len = sizeof(button_value);
     if (rf69.recv(&button_value, &len)) {
@@ -88,24 +79,12 @@ void loop() {
         digitalWrite(motor_pin, LOW);
       }
       digitalWrite(led_unavailable, LOW);
-      Serial.print("Received [");
-      Serial.print(len);
-      Serial.print("]: ");
-      Serial.println(button_value);
-      Serial.print("RSSI: ");
-      Serial.println(rf69.lastRssi(), DEC);
-
-      //if (strstr((char *)buf, "Hello World")) {
-        // Send a reply!
-       // uint8_t data[] = "And hello back to you";
-       // rf69.send(data, sizeof(data));
-       // rf69.waitPacketSent();
-       // Serial.println("Sent a reply");
-       // Blink(LED, 40, 3); //blink LED 3 times, 40ms between blinks
-     // }
-   // } else {
-     // Serial.println("Receive failed");
-    // }
+      //Serial.print("Received [");
+      //Serial.print(len);
+      //Serial.print("]: ");
+      //Serial.println(button_value);
+      //Serial.print("RSSI: ");
+      //Serial.println(rf69.lastRssi(), DEC);
   }
   else {
     digitalWrite(led_unavailable, HIGH);
