@@ -16,7 +16,6 @@ float vbatm = 0;
 
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 uint8_t button_pin = 6;
-boolean button_state = LOW;
 uint8_t button_value = 0;
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 
@@ -57,7 +56,10 @@ void setup()
   pinMode(LED, OUTPUT);
 }
 
-
+uint8_t* debounce() {
+    uint8_t debounced_state = (button_state << 1) | digitalRead(button_pin) | 0xfe00;
+    return debounced_state;
+}
 
 void loop() {
   vbatm = analogRead(VBATPIN);
@@ -66,8 +68,8 @@ void loop() {
   vbatm/=1024;
   Serial.print("Voltage: ");
   Serial.println(vbatm);
-  button_state = digitalRead(button_pin);
-  if(button_state == HIGH) {
+  uint8_t *button_state = debounce();
+  if(button_state == 1) {
     button_value = 1;
     rf69.send(&button_value, sizeof(button_value));
   }
