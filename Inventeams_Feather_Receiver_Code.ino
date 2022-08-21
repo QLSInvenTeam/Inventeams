@@ -1,27 +1,22 @@
 #include <SPI.h>
 #include <RH_RF69.h>
 
-/************ Radio Setup ***************/
-
-// Change to 434.0 or other frequency, must match RX's freq!
 #define RF69_FREQ 915.0
 #define VBATPIN A0
 float vbatm = 0;
 
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
-  // Feather M0 w/Radio
   #define RFM69_CS      8
   #define RFM69_INT     3
   #define RFM69_RST     4
   #define LED           2
 #endif
 
-// Singleton instance of the radio driver
+
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 uint8_t motor_pin = 13;
 uint8_t led_unavailable = 5;
 uint8_t button_value = 0;
-int16_t packetnum = 0;  // packet counter, we increment per xmission
 
 void setup() 
 {
