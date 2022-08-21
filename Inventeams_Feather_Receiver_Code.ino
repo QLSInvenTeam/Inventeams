@@ -26,10 +26,7 @@ void setup()
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
-
-  Serial.println("Feather RFM69 RX Test!");
-  Serial.println();
-
+  
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
   digitalWrite(RFM69_RST, LOW);
