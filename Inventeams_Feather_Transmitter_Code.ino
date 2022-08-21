@@ -57,7 +57,7 @@ void setup()
 }
 
 uint8_t* debounce() {
-    uint8_t debounced_state = (button_state << 1) | digitalRead(button_pin) | 0xfe00;
+    uint8_t debounced_state = (debounced_state << 1) | digitalRead(button_pin) | 0xfe00;
     return debounced_state;
 }
 
