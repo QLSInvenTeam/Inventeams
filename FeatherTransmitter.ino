@@ -52,7 +52,7 @@ void setup()
   pinMode(LED, OUTPUT);
 }
 
-uint8_t* debounce() {
+uint8_t debounce() {
     uint8_t debounced_state = 0;
     debounced_state = (debounced_state << 1) | digitalRead(button_pin) | 0xfe00;
     return debounced_state;
@@ -65,7 +65,7 @@ void loop() {
   vbatm/=1024;
   Serial.print("Voltage: ");
   Serial.println(vbatm);
-  uint8_t *button_state = debounce();
+  uint8_t button_state = debounce();
   if(button_state == 1) {
     button_value = 1;
     rf69.send(&button_value, sizeof(button_value));
