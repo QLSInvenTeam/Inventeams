@@ -1,5 +1,6 @@
 #include <SPI.h>
 #include <RH_RF69.h>
+#include <ArduinoLowPower.h>
 
 #define RF69_FREQ 915.0
 #define VBATPIN A0
@@ -29,7 +30,7 @@ void setup()
 {
   Serial.begin(115200);
 
-  attachInterrupt(digitalPinToInterrupt(sleep_pin), toggleSleep, CHANGE);
+  LowPower.attachInterruptWakeup(digitalPinToInterrupt(sleep_pin), toggleSleep, CHANGE);
   
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
@@ -55,9 +56,6 @@ void setup()
   uint8_t key[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
   rf69.setEncryptionKey(key);
-
-  //system control block -> system control register (system control register controls entry and exit from low power state)
-  SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
   
   pinMode(LED, OUTPUT);
 }
@@ -72,9 +70,7 @@ void loop() {
   Serial.println(vbatm);
   if(sleep) {
     Serial.println("sleeping");
-    __WFI();
-    toggleSleep();
-    Serial.println("not sleeping");
+    LowPower.deepSleep();
   }
   if (rf69.available()) {
     uint8_t button_value;   
