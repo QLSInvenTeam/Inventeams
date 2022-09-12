@@ -3,7 +3,7 @@
 #include <ArduinoLowPower.h>
 
 #define RF69_FREQ 915.0
-#define VBATPIN A0
+#define VBATPIN A7
 float vbatm = 0;
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
   #define RFM69_CS      8
