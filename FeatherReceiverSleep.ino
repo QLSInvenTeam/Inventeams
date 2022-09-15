@@ -21,9 +21,10 @@ uint8_t motor_pin = 13;
 uint8_t led_unavailable = 5;
 uint8_t button_value = 0;
 
-void toggleSleep() {
-  sleep = !sleep;
-  Serial.println(sleep);
+void wakeUp() {
+//  sleep = !sleep;
+//  Serial.println(sleep);
+    Serial.println("Woken Up");
 }
 
 void setup() 
@@ -68,9 +69,10 @@ void loop() {
   vbatm/=1024;
   Serial.print("Voltage: ");
   Serial.println(vbatm);
-  if(sleep) {
+  if(digitalRead(sleep_pin) == LOW) {
     Serial.println("sleeping");
-    LowPower.deepSleep();
+    LowPower.sleep();
+//    LowPower.deepSleep();
   }
   if (rf69.available()) {
     uint8_t button_value;   
