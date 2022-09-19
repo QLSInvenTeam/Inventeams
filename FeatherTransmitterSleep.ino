@@ -34,7 +34,7 @@ void setup()
   
   
   //check if button has been pressed on sleep pin, then toggle sleep value
-  LowPower.attachInterruptWakeup(digitalPinToInterrupt(button_pin), wakeUp, CHANGE);
+  LowPower.attachInterruptWakeup(button_pin, wakeUp, CHANGE);
   
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
