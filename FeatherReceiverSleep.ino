@@ -31,7 +31,7 @@ void setup()
 {
   Serial.begin(115200);
 
-  LowPower.attachInterruptWakeup(digitalPinToInterrupt(sleep_pin), toggleSleep, CHANGE);
+  LowPower.attachInterruptWakeup(sleep_pin, toggleSleep, CHANGE);
   
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
