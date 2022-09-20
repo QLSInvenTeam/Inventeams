@@ -22,10 +22,9 @@ uint8_t button_pin = 6;
 uint8_t button_value = 0;
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 
-void wakeUp() {
-//  sleep = !sleep;
-//  Serial.println(sleep);
-    Serial.println("Woken Up");
+void toggleSleep() {
+  sleep = !sleep;
+  Serial.println(sleep);
 }
 void setup() 
 {
@@ -34,7 +33,7 @@ void setup()
   
   
   //check if button has been pressed on sleep pin, then toggle sleep value
-  LowPower.attachInterruptWakeup(button_pin, wakeUp, CHANGE);
+  LowPower.attachInterruptWakeup(digitalPinToInterrupt(button_pin), toggleSleep, FALLING);
   
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
@@ -77,10 +76,9 @@ void loop() {
   vbatm/=1024;
   Serial.print("Voltage: ");
   Serial.println(vbatm);
-  if (digitalRead(button_pin) == LOW) {
-//    Serial.println("sleeping");
-//    LowPower.deepSleep();
-      LowPower.sleep();
+  if(sleep) {
+    Serial.println("sleeping");
+    LowPower.deepSleep();
   }
   uint8_t button_state = debounce(button_pin);
   if(button_state == 1) {
@@ -92,3 +90,4 @@ void loop() {
     rf69.send(&button_value, sizeof(button_value));
   }
 }
+
