@@ -22,7 +22,7 @@ float vbatm = 0;
 
 
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
-uint8_t button_pin = 6;
+uint8_t button_pin = 12;
 uint8_t button_value = 0;
 uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 
