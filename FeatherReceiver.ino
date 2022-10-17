@@ -4,6 +4,11 @@
 #define RF69_FREQ 915.0
 #define VBATPIN A0
 float vbatm = 0;
+#define THRESHOLD_VOLTAGE 3.7
+
+#define RED_PIN A1
+#define GREEN_PIN A2
+#define BLUE_PIN A3
 
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
   #define RFM69_CS      8
@@ -18,10 +23,19 @@ uint8_t motor_pin = 13;
 uint8_t led_unavailable = 5;
 uint8_t button_value = 0;
 
+void rgb_color(int r, int g, int b) {
+  analogWrite(RED_PIN, r);
+  analogWrite(GREEN_PIN, g);
+  analogWrite(BLUE_PIN, b);
+}
+
 void setup() 
 {
   Serial.begin(115200);
-
+  
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(BLUE_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
 
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
@@ -59,6 +73,13 @@ void loop() {
   vbatm/=1024;
   Serial.print("Voltage: ");
   Serial.println(vbatm);
+  
+  if (vbatm < THRESHOLD_VOLTAGE) {
+    rgb_color(255, 0, 0);
+  } else {
+    rgb_color(0, 255, 0);
+  }
+  
  if (rf69.available()) {
     uint8_t button_value;   
     uint8_t len = sizeof(button_value);
