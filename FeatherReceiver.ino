@@ -19,7 +19,7 @@ float vbatm = 0;
 
 
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
-uint8_t motor_pin = 13;
+uint8_t motor_pin = 18;
 uint8_t led_unavailable = 5;
 uint8_t button_value = 0;
 
