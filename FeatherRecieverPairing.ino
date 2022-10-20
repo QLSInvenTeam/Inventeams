@@ -67,13 +67,13 @@ uint8_t debounce() {
 
 
 void loop() {
+   uint8_t pairing_state = debounce();
   if(pairing_state == 1) {
       pairing = !pairing;
   }
   if (rf69.available()) {
     uint8_t freq;
     uint8_t len = sizeof(freq);
-    uint8_t pairing_state = debounce();
     if (rf69.recv(&freq, &len) && pairing) {
       if (!len) return;
       Serial.print("Received [");
