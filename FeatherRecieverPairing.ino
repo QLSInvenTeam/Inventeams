@@ -15,6 +15,7 @@ RH_RF69 rf69(RFM69_CS, RFM69_INT);
 uint8_t motor_pin = 18;
 uint8_t led_unavailable = 5;
 uint8_t button_value = 0;
+uint8_t pairing_pin = 12; //some arbitrary pin
 
 
 boolean pairing = true;
@@ -30,6 +31,7 @@ void setup()
   Serial.begin(115200);
 
   pinMode(LED, OUTPUT);
+  pinMode(pairing_pin, INPUT);
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
@@ -57,13 +59,22 @@ void setup()
 
   pinMode(LED, OUTPUT);
 }
+uint8_t debounce() {
+    uint8_t debounced_state = 0;
+    debounced_state = (debounced_state << 1) | digitalRead(pairing_pin) | 0xfe00;
+    return debounced_state;
+}
 
 
 void loop() {
   if (rf69.available()) {
     uint8_t freq;
     uint8_t len = sizeof(freq);
-    if (rf69.recv(&freq, &len)) {
+    uint8_t pairing_state = debounce();
+    if(pairing_state == 1) {
+      pairing = !pairing;
+    }
+    if (rf69.recv(&freq, &len) && pairing) {
       if (!len) return;
       Serial.print("Received [");
       Serial.print(len);
@@ -71,6 +82,7 @@ void loop() {
       Serial.println(freq);
       Serial.print("RSSI: ");
       Serial.println(rf69.lastRssi(), DEC);
+      rf69.setFrequency((RF69_FREQ+freq));
       pairing = false;
     }
   }
