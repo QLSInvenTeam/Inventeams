@@ -82,7 +82,6 @@ void loop() {
       Serial.println(freq);
       Serial.print("RSSI: ");
       Serial.println(rf69.lastRssi(), DEC);
-      rf69.setFrequency((RF69_FREQ+freq));
       pairing = false;
     }
   }
