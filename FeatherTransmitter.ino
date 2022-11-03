@@ -84,7 +84,7 @@ void loop() {
   Serial.print("Voltage: ");
   Serial.println(vbatm);
   Serial.println("Chip ID: ");
-  Serial.println(printChipID());
+  printChipID();
   if (vbatm < THRESHOLD_VOLTAGE) {
     rgb_color(255, 0, 0);
   } else {
