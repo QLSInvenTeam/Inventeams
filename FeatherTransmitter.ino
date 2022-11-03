@@ -83,6 +83,8 @@ void loop() {
   vbatm/=1024;
   Serial.print("Voltage: ");
   Serial.println(vbatm);
+  Serial.println("Chip ID: ");
+  Serial.println(printChipID());
   if (vbatm < THRESHOLD_VOLTAGE) {
     rgb_color(255, 0, 0);
   } else {
@@ -97,4 +99,21 @@ void loop() {
     button_value = 0;
     rf69.send(&button_value, sizeof(button_value));
   }
+}
+
+void printChipID() {
+  volatile uint32_t val1, val2, val3, val4;
+  volatile uint32_t *ptr1 = (volatile uint32_t *)0x0080A00C;
+  val1 = *ptr1;
+  volatile uint32_t *ptr = (volatile uint32_t *)0x0080A040;
+  val2 = *ptr;
+  ptr++;
+  val3 = *ptr;
+  ptr++;
+  val4 = *ptr;
+
+  Serial.print("chip id: 0x");
+  char buf[33];
+  sprintf(buf, "%8x%8x%8x%8x", val1, val2, val3, val4);
+  Serial.println(buf);
 }
