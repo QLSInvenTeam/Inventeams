@@ -70,12 +70,6 @@ void setup()
   pinMode(LED, OUTPUT);
 }
 
-uint8_t debounce() {
-    uint8_t debounced_state = 0;
-    debounced_state = (debounced_state << 1) | digitalRead(button_pin) | 0xfe00;
-    return debounced_state;
-}
-
 void loop() {
   vbatm = analogRead(VBATPIN);
   vbatm*=2;
@@ -90,7 +84,7 @@ void loop() {
   } else {
     rgb_color(0, 255, 0);
   }
-  uint8_t button_state = debounce();
+  uint8_t button_state = digitalRead(button_pin);
   if(button_state == 1) {
     button_value = 1;
     rf69.send(&button_value, sizeof(button_value));
