@@ -4,6 +4,7 @@
 #define RF69_FREQ 915.0
 #define VBATPIN A0
 float vbatm = 0;
+uint8_t lastiter = 0;
 #define THRESHOLD_VOLTAGE 3.7
 
 #define RED_PIN A1
@@ -81,17 +82,30 @@ void loop() {
   }
   
  if (rf69.available()) {
-    uint8_t button_value;   
-    uint8_t len = sizeof(button_value);
-    if (rf69.recv(&button_value, &len)) {
+    string buf[3];
+    uint8_t len = sizeof(buf);
+    if (rf69.recv(&buf, &len)) {
       if (!len) return;
-      if(button_value == 1) {
-        digitalWrite(motor_pin, HIGH);
+      if(buf[0] == "1") {
+        if(buf[2] == lastiter) {
+           digitalWrite(motor_pin, LOW); 
+        }
+        else {
+          digitalWrite(motor_pin, HIGH); 
+          lastiter = buf[2];
+        }
       }
       else {
-        digitalWrite(motor_pin, LOW);
+       digitalWrite(motor_pin, LOW); 
       }
       digitalWrite(led_unavailable, LOW);
+//       if(button_value == 1) {
+//         digitalWrite(motor_pin, HIGH);
+//       }
+//       else {
+//         digitalWrite(motor_pin, LOW);
+//       }
+//       digitalWrite(led_unavailable, LOW);
       //Serial.print("Received [");
       //Serial.print(len);
       //Serial.print("]: ");
