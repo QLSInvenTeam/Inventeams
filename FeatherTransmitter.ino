@@ -4,7 +4,8 @@
 #define RF69_FREQ 915.0
 #define VBATPIN A0
 float vbatm = 0;
-
+string buf[3];
+uint8_t iter = 0;
 #define THRESHOLD_VOLTAGE 3.7
 
 #define RED_PIN A1
@@ -66,7 +67,7 @@ void setup()
                     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
   
   rf69.setEncryptionKey(key);
-  
+  buf[1] = getChipID();
   pinMode(LED, OUTPUT);
 }
 
@@ -77,8 +78,7 @@ void loop() {
   vbatm/=1024;
   Serial.print("Voltage: ");
   Serial.println(vbatm);
-  Serial.println("Chip ID: ");
-  printChipID();
+  Serial.println(buf[1]);
   if (vbatm < THRESHOLD_VOLTAGE) {
     rgb_color(255, 0, 0);
   } else {
@@ -87,15 +87,29 @@ void loop() {
   uint8_t button_state = digitalRead(button_pin);
   if(button_state == 1) {
     button_value = 1;
-    rf69.send(&button_value, sizeof(button_value));
+    buf[0] = "1";
+    buf[1] = iter;
+    rf69.send(&buf, sizeof(buf));
+    delay(10);
+    rf69.send(&buf, sizeof(buf));
+    delay(10);
+    rf69.send(&buf, sizeof(buf));
+    //rf69.send(&button_value, sizeof(button_value));
   }
   else {
     button_value = 0;
-    rf69.send(&button_value, sizeof(button_value));
+    buf[0] = "0";
+    rf69.send(&buf, sizeof(buf));
+    delay(10);
+    rf69.send(&buf, sizeof(buf));
+    delay(10);
+    rf69.send(&buf, sizeof(buf));
+    iter++;
+    //rf69.send(&button_value, sizeof(button_value));
   }
 }
 
-void printChipID() {
+string getChipID() {
   volatile uint32_t val1, val2, val3, val4;
   volatile uint32_t *ptr1 = (volatile uint32_t *)0x0080A00C;
   val1 = *ptr1;
@@ -105,9 +119,7 @@ void printChipID() {
   val3 = *ptr;
   ptr++;
   val4 = *ptr;
-
-  Serial.print("chip id: 0x");
-  char buf[33];
-  sprintf(buf, "%8x%8x%8x%8x", val1, val2, val3, val4);
-  Serial.println(buf);
+  
+  string concatenate = val1 + "" + val2 + "" + val3 + "" + val4;
+  return concatenate;
 }
