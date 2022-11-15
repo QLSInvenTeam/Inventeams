@@ -36,7 +36,7 @@ void rgb_color(int r, int g, int b) {
 
 void setup() 
 {
-  pinMode(button_pin, INPUT);
+  pinMode(button_pin, INPUT_PULLUP);
   Serial.begin(115200);
   
   pinMode(RED_PIN, OUTPUT);
