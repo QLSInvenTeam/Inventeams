@@ -105,6 +105,7 @@ void loop() {
     delay(10);
     rf69.send(&buf, sizeof(buf));
     iter++;
+    Serial.println(iter);
     //rf69.send(&button_value, sizeof(button_value));
   }
 }
