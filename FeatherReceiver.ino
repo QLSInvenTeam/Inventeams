@@ -93,6 +93,7 @@ void loop() {
         else {
           digitalWrite(motor_pin, HIGH); 
           lastiter = buf[2];
+          Serial.println(lastiter);
         }
       }
       else {
