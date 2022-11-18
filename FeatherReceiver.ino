@@ -37,6 +37,7 @@ void setup()
   pinMode(RED_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
+  pinMode(motor_pin, OUTPUT);
 
   pinMode(LED, OUTPUT);     
   pinMode(RFM69_RST, OUTPUT);
