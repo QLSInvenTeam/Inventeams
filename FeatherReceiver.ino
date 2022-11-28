@@ -117,20 +117,6 @@ void loop() {
       else {
         digitalWrite(MOTOR_PIN, LOW);
       }
-      //      digitalWrite(led_/unavailable, LOW);
-      //       if(button_value == 1) {
-      //         digitalWrite(MOTOR_PIN, HIGH);
-      //       }
-      //       else {
-      //         digitalWrite(MOTOR_PIN, LOW);
-      //       }
-      //       digitalWrite(led_unavailable, LOW);
-      //Serial.print("Received [");
-      //Serial.print(len);
-      //Serial.print("]: ");
-      //Serial.println(button_value);
-      //Serial.print("RSSI: ");
-      //Serial.println(rf69.lastRssi(), DEC);
     }
     else {
       //    digitalWrite(led_unavailable, HIGH);
