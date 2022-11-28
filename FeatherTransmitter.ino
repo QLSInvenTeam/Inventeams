@@ -6,7 +6,7 @@
 #define VBATPIN A7
 float vbatm = 0;
 uint8_t lastiter = 0;
-#define THRESHOLD_VOLTAGE 3.7
+#define THRESHOLD_VOLTAGE 3.0
 
 #define RED_PIN A1
 #define GREEN_PIN A2
