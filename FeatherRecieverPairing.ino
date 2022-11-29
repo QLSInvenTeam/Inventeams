@@ -1,40 +1,79 @@
 #include <SPI.h>
 #include <RH_RF69.h>
 
+#include <array>
+#include <map>
+#include <algorithm>
+
 #define RF69_FREQ 915.0
+
+#define VBATPIN A7
+float vbatm = 0;
+#define THRESHOLD_VOLTAGE 3.0
+
+#define DISCONNECT_TIMEOUT 2000
+
+#define RED_PIN A1
+#define GREEN_PIN A2
+#define BLUE_PIN A3
+
+#define UUID_LEN 16
+
+
+#define MOTOR_PIN 18
 
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
 #define RFM69_CS      8
 #define RFM69_INT     3
 #define RFM69_RST     4
-#define LED           13
 #endif
 
 
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
-uint8_t motor_pin = 18;
-uint8_t led_unavailable = 5;
-uint8_t button_value = 0;
-uint8_t pairing_pin = 12; //some arbitrary pin
 
+typedef std::array<uint8_t, UUID_LEN> uuid;
 
-boolean pairing = true;
-unsigned long previousMillis = 0;  // will store last time LED was updated
-const long interval = 1000;  // interval at which to blink (milliseconds)
-int ledState = LOW;  // ledState used to set the LED
+std::map<uuid, std::pair<boolean, unsigned long>> devices;
 
+typedef struct {
+  int r;
+  int g;
+  int b;
+} Color;
 
+namespace Colors {
+Color RED = {255, 0, 0};
+Color GREEN = {0, 255, 0};
+}
 
+void rgb_color(Color color) {
+  analogWrite(RED_PIN, color.r);
+  analogWrite(GREEN_PIN, color.g);
+  analogWrite(BLUE_PIN, color.b);
+}
+
+float get_voltage() {
+  float measuredvbat = analogRead(VBATPIN);
+  measuredvbat *= 2;
+  measuredvbat *= 3.3;
+  measuredvbat /= 1024;
+  return measuredvbat;
+}
 
 void setup()
 {
   Serial.begin(115200);
 
-  pinMode(LED, OUTPUT);
-  pinMode(pairing_pin, INPUT);
+  pinMode(RED_PIN, OUTPUT);
+  pinMode(BLUE_PIN, OUTPUT);
+  pinMode(GREEN_PIN, OUTPUT);
+  pinMode(MOTOR_PIN, OUTPUT);
+  pinMode(LED_BUILTIN, OUTPUT);
+
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
+  //  reset
   digitalWrite(RFM69_RST, HIGH);
   delay(10);
   digitalWrite(RFM69_RST, LOW);
@@ -56,54 +95,53 @@ void setup()
                     0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08
                   };
   rf69.setEncryptionKey(key);
-
-  pinMode(LED, OUTPUT);
-}
-uint8_t debounce() {
-    uint8_t debounced_state = 0;
-    debounced_state = (debounced_state << 1) | digitalRead(pairing_pin) | 0xfe00;
-    return debounced_state;
 }
 
 
 void loop() {
-   uint8_t pairing_state = debounce();
-  if(pairing_state == 1) {
-      pairing = !pairing;
-  }
+  vbatm = get_voltage();
+  //  Serial.print("Voltage: ");
+  //  Serial.println(vbatm);
+
+  rgb_color(
+    vbatm < THRESHOLD_VOLTAGE ?
+    Colors::RED
+    :
+    Colors::GREEN
+  );
+
   if (rf69.available()) {
-    uint8_t freq;
-    uint8_t len = sizeof(freq);
-    if (rf69.recv(&freq, &len) && pairing) {
+    uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
+    uint8_t len = sizeof(buf);
+    if (rf69.recv(buf, &len)) {
       if (!len) return;
-      Serial.print("Received [");
-      Serial.print(len);
-      Serial.print("]: ");
-      Serial.println(freq);
-      Serial.print("RSSI: ");
-      Serial.println(rf69.lastRssi(), DEC);
-      pairing = false;
+      uuid deviceId;
+      std::copy_n(std::begin(buf), UUID_LEN, std::begin(deviceId));
+      // !! millis overflows in 70 days
+      // https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/
+      devices[deviceId] = std::make_pair(buf[UUID_LEN], millis());
+
     }
   }
-  if (pairing) {
-    Serial.println("Looking for signal");
-  }
 
-  unsigned long currentMillis = millis();
-  if (pairing) {
-    if (currentMillis - previousMillis >= interval) {
-      // save the last time you blinked the LED
-      previousMillis = currentMillis;
+  unsigned long timestamp = millis();
 
-      // if the LED is off turn it on and vice-versa:
-      if (ledState == LOW) {
-        ledState = HIGH;
-      } else {
-        ledState = LOW;
-      }
-
-      // set the LED with the ledState of the variable:
-      digitalWrite(LED, ledState);
+  // Set device to LOW if signal timed out
+  for (auto& device : devices) {
+    if (device.second.first == false && device.second.second - timestamp > DISCONNECT_TIMEOUT) {
+      device.second.first = true;
+      device.second.second = timestamp;
     }
   }
+
+  boolean buzz = false;
+  for (auto& device : devices) {
+    if (device.second.first == true) {
+      buzz = true;
+    }
+  }
+
+  digitalWrite(MOTOR_PIN, buzz ? HIGH : LOW);
+
 }
+
