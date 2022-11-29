@@ -128,8 +128,8 @@ void loop() {
 
   // Set device to LOW if signal timed out
   for (auto& device : devices) {
-    if (device.second.first == false && device.second.second - timestamp > DISCONNECT_TIMEOUT) {
-      device.second.first = true;
+    if (device.second.first == true && device.second.second - timestamp > DISCONNECT_TIMEOUT) {
+      device.second.first = false;
       device.second.second = timestamp;
     }
   }
