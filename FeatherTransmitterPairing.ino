@@ -92,7 +92,7 @@ boolean debounce() {
 
 void set_data(uint8_t data[], int len) {
   for (int i = 0; i < len; i++) {
-    buf[UUID_LEN + i + 1] = data[i];
+    buf[UUID_LEN + i] = data[i];
   }
 }
 
