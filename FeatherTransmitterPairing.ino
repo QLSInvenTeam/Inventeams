@@ -59,7 +59,7 @@ uuid getChipID() {
   //https://stackoverflow.com/questions/6499183/converting-a-uint32-value-into-a-uint8-array4
   //  no clue if this works but yeah
   for (int i = 0; i < 4; i++) {
-    uint8_t *origp = (uint8_t *)&orig;
+    uint8_t *origp = (uint8_t *)&orig[i];
     for (int j = 0; j < 4; j++) {
       chipId[4 * i + j] = origp[j];
     }
