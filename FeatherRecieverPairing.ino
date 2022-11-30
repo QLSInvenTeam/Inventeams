@@ -128,15 +128,15 @@ void loop() {
 
   // Set device to LOW if signal timed out
   for (auto& device : devices) {
-    if (device.second.first == true && timestamp - device.second.second > DISCONNECT_TIMEOUT) {
+    if (device.second.first && timestamp - device.second.second > DISCONNECT_TIMEOUT) {
       device.second.first = false;
       device.second.second = timestamp;
     }
   }
 
-  boolean buzz = false;
+  bool buzz = false;
   for (auto& device : devices) {
-    if (device.second.first == true) {
+    if (device.second.first) {
       buzz = true;
     }
   }
