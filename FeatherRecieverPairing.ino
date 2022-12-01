@@ -119,7 +119,7 @@ void loop() {
       std::copy_n(std::begin(buf), UUID_LEN, std::begin(deviceId));
       // !! millis overflows in 70 days
       // https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/
-      devices[deviceId] = std::make_pair(buf[UUID_LEN], millis());
+      devices[deviceId] = std::make_pair(!buf[UUID_LEN], millis());
 
     }
   }
