@@ -18,6 +18,9 @@ float vbatm = 0;
 
 #define BUTTON_PIN 12
 
+#define RAND_DELAY MIN 10
+#define RAND_DELAY_MAX 20
+
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
 #define RFM69_CS      8
 #define RFM69_INT     3
@@ -96,8 +99,16 @@ void set_data(uint8_t data[], int len) {
   }
 }
 
+void random_delay() {
+  int duration = random(RAND_DELAY_MIN, RAND_DELAY_MAX);
+  delay(duration);
+}
+
 void setup()
 {
+
+  randomSeed(analogRead(A0));
+  
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   Serial.begin(115200);
 
@@ -156,5 +167,5 @@ void loop() {
   set_data(data, 1);
 
   rf69.send(buf, sizeof(buf));
+  random_delay();
 }
-
