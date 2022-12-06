@@ -9,6 +9,7 @@
 
 #define VBATPIN A7
 float vbatm = 0;
+bool pairing_done = false;
 #define THRESHOLD_VOLTAGE 3.0
 
 #define DISCONNECT_TIMEOUT 2000
@@ -22,6 +23,8 @@ float vbatm = 0;
 
 #define MOTOR_PIN 18
 
+#define PAIRING_PIN 13
+
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
 #define RFM69_CS      8
 #define RFM69_INT     3
@@ -32,6 +35,7 @@ float vbatm = 0;
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
 typedef std::array<uint8_t, UUID_LEN> uuid;
+uint8_t syncwords[4];
 
 std::map<uuid, std::pair<boolean, unsigned long>> devices;
 
@@ -64,6 +68,7 @@ void setup()
 {
   Serial.begin(115200);
 
+  pinMode(PAIRING_PIN, INPUT_PULLUP);
   pinMode(RED_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
@@ -115,11 +120,19 @@ void loop() {
     uint8_t len = sizeof(buf);
     if (rf69.recv(buf, &len)) {
       if (!len) return;
-      uuid deviceId;
-      std::copy_n(std::begin(buf), UUID_LEN, std::begin(deviceId));
-      // !! millis overflows in 70 days
-      // https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/
-      devices[deviceId] = std::make_pair(!buf[UUID_LEN], millis());
+      uint8_t pairing_state = digitalRead(BUTTON_PIN);
+      if(!pairing_state && !pairing_done) {
+        uuid deviceId;
+        std::copy_n(std::begin(buf), UUID_LEN, std::begin(deviceId));
+        // !! millis overflows in 70 days
+        // https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/
+        devices[deviceId] = std::make_pair(!buf[UUID_LEN], millis());
+      }
+      else {
+        std::copy(syncwords, buf+UUID_LEN, 4); 
+        setSyncWords(syncwords, sizeof(syncwords));
+        pairing_done = true;
+      }
 
     }
   }
