@@ -7,6 +7,7 @@
 
 #define VBATPIN A7
 float vbatm = 0;
+uint8_t syncwords[4];
 
 #define THRESHOLD_VOLTAGE 3.7
 
@@ -20,6 +21,9 @@ float vbatm = 0;
 
 #define RAND_DELAY MIN 10
 #define RAND_DELAY_MAX 20
+
+#define KEY_MIN 0
+#define KEY_MAX 128
 
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
 #define RFM69_CS      8
@@ -103,6 +107,14 @@ void random_delay() {
   int duration = random(RAND_DELAY_MIN, RAND_DELAY_MAX);
   delay(duration);
 }
+void generate_key() {
+   int first = random(KEY_MIN, KEY_MAX);
+   int second = random(KEY_MIN, KEY_MAX);
+   int third = random(KEY_MIN, KEY_MAX);
+   int fourth = random(KEY_MIN, KEY_MAX);
+   syncwords = {first, second, third, fourth};
+   rf69.setSyncWords(syncwords, sizeof(syncwords));
+}
 
 void setup()
 {
@@ -142,9 +154,9 @@ void setup()
 
   rf69.setEncryptionKey(key);
 
-  for (int i = 0; i < UUID_LEN; i++) {
+  for (int i = 0; i < UUID_LEN + 4; i++) {
     //    Load UUID into buf
-    buf[i] = UUID[i];
+    buf[i] = (i >= UUID_LEN) ? (syncwords[i - UUID_LEN]) : UUID[i];
   }
 }
 
