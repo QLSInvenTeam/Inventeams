@@ -22,7 +22,6 @@ bool pairing_done = false;
 
 
 #define MOTOR_PIN 18
-
 #define PAIRING_PIN 13
 
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
@@ -120,8 +119,8 @@ void loop() {
     uint8_t len = sizeof(buf);
     if (rf69.recv(buf, &len)) {
       if (!len) return;
-      uint8_t pairing_state = digitalRead(BUTTON_PIN);
-      if(!pairing_state && !pairing_done) {
+      uint8_t pairing_state = digitalRead(PAIRING_PIN);
+      if(pairing_state && !pairing_done) {
         uuid deviceId;
         std::copy_n(std::begin(buf), UUID_LEN, std::begin(deviceId));
         // !! millis overflows in 70 days
