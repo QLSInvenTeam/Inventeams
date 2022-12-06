@@ -8,6 +8,7 @@
 #define VBATPIN A7
 float vbatm = 0;
 uint8_t syncwords[4];
+bool pairing_done = false;
 
 #define THRESHOLD_VOLTAGE 3.7
 
@@ -18,6 +19,7 @@ uint8_t syncwords[4];
 #define BLUE_PIN A3
 
 #define BUTTON_PIN 12
+#define PAIRING_PIN 13
 
 #define RAND_DELAY MIN 10
 #define RAND_DELAY_MAX 20
@@ -115,13 +117,18 @@ void generate_key() {
    syncwords = {first, second, third, fourth};
    rf69.setSyncWords(syncwords, sizeof(syncwords));
 }
-
+void clearsyncwords() {
+   for(int i=0; i<4; i++) {
+      buf[UUID_LEN + i] = 0; 
+   }
+}
 void setup()
 {
 
   randomSeed(analogRead(A0));
   
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(PAIRING_PIN, INPUT_PULLUP);
   Serial.begin(115200);
 
   pinMode(RED_PIN, OUTPUT);
@@ -156,7 +163,7 @@ void setup()
 
   for (int i = 0; i < UUID_LEN + 4; i++) {
     //    Load UUID into buf
-    buf[i] = (i >= UUID_LEN) ? (syncwords[i - UUID_LEN]) : UUID[i];
+    buf[i] = UUID[i];
   }
 }
 
@@ -171,13 +178,26 @@ void loop() {
     :
     Colors::GREEN
   );
+  uint8_t pairing_state = digitalRead(BUTTON_PIN);
+  if(!pairing_state && !pairing_done) {
+     for(int i=0; i<4; i++) {
+         buf[UUID_LEN + i] = syncwords[i]; 
+     }
+     for(int i=0; i<80; i++) {
+        rf69.send(buf, sizeof(buf));
+        random_delay();
+     }
+    pairing_done = true;
+    clearsyncwords();
+  }
+  else {
+    uint8_t button_state = debounce();
+    Serial.println("Button State:");
+    Serial.println(button_state);
+    uint8_t data[] = {button_state};
+    set_data(data, 1);
 
-  uint8_t button_state = debounce();
-  Serial.println("Button State:");
-  Serial.println(button_state);
-  uint8_t data[] = {button_state};
-  set_data(data, 1);
-
-  rf69.send(buf, sizeof(buf));
-  random_delay();
+    rf69.send(buf, sizeof(buf));
+    random_delay();
+  }
 }
