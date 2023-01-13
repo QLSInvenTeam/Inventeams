@@ -17,8 +17,8 @@
 #define GREEN_PIN A2
 #define BLUE_PIN A3
 
-#define BUTTON_PIN 12
-#define PAIRING_PIN 13
+#define BUTTON_PIN 10
+#define PAIRING_PIN 12
 
 #define RAND_DELAY_MIN 10
 #define RAND_DELAY_MAX 20
@@ -36,6 +36,8 @@
 PinButton pairing_pin(PAIRING_PIN);
 
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
+
+uint8_t defaultwords[] = { 0x2d, 0x64 };
 
 /*
   normal: normal operation
@@ -67,9 +69,9 @@ namespace Colors {
   Color const GREEN       = {  0, 255,   0,   0};
   Color const BLUE        = {  0,   0, 255,   0};
   
-  Color const RED_BLINK   = {255,   0,   0, 500};
-  Color const GREEN_BLINK = {  0, 255,   0, 500};
-  Color const BLUE_BLINK  = {  0,   0, 255, 500};
+  Color const RED_BLINK   = {255,   0,   0, 200};
+  Color const GREEN_BLINK = {  0, 255,   0, 200};
+  Color const BLUE_BLINK  = {  0,   0, 255, 200};
   
   Color const OFF         = {  0,   0,   0,   0};
 }
@@ -100,6 +102,8 @@ uuid getChipID() {
   return chipId;
 }
 
+
+
 void rgb_color(Color color) {
   static unsigned long previousMillis = 0;
   static bool blinkState = HIGH;
@@ -109,8 +113,9 @@ void rgb_color(Color color) {
   if (color.blink_interval) {
     if (currentMillis - previousMillis >= color.blink_interval) {
       previousMillis = currentMillis;
+          blinkState = !blinkState;
+
     }
-    blinkState = !blinkState;
     if (blinkState == LOW) {
       color = Colors::OFF;
     }
@@ -153,7 +158,7 @@ void setup()
   pinMode(BLUE_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
 
-  pinMode(LED_BUILTIN, OUTPUT);
+//  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
@@ -192,8 +197,8 @@ void setup()
 
 void loop() {
   float vbatm = get_voltage();
-  Serial.print("Voltage: ");
-  Serial.println(vbatm);
+//  Serial.print("Voltage: ");
+//  Serial.println(vbatm);
 
   pairing_pin.update();
   if (pairing_pin.isSingleClick()) {
@@ -201,26 +206,31 @@ void loop() {
       state = normal;
       rf69.setSyncWords(data.syncwords, sizeof(data.syncwords));
     } else {
-      state == pair_transmit;
-      rf69.setSyncWords();
+      state = pair_transmit;
+      rf69.setSyncWords(defaultwords, sizeof(defaultwords));
     }
   }
 
   if (pairing_pin.isDoubleClick()) {
     state = pair_listen;
-    rf69.setSyncWords();
+    rf69.setSyncWords(defaultwords, sizeof(defaultwords));
   }
 
   if (state == pair_transmit) {
     uint8_t buf[sizeof(data)];
     memcpy(buf, &data, sizeof(data));
     rf69.send(buf, sizeof(buf));
+    Serial.println("Packet sent");
     rgb_color(Colors::GREEN_BLINK);
   }
 
   if (state == pair_listen) {
+  Serial.println("Pair_listen");
     if (rf69.available()) {
+        Serial.println("Packet recieved");
+
       uint8_t buf[sizeof(data)];
+
       uint8_t len = sizeof(buf);
       packet recv;
 
@@ -243,8 +253,8 @@ void loop() {
 
   if (state == normal) {
     data.button_state = debounce();
-    Serial.println("Button State:");
-    Serial.println(data.button_state);
+//    Serial.println("Button State:");
+//    Serial.println(data.button_state);
     uint8_t buf[sizeof(data)];
     memcpy(buf, &data, sizeof(data));
     rf69.send(buf, sizeof(buf));
