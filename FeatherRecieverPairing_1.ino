@@ -75,8 +75,8 @@ void rgb_color(Color color) {
   if (color.blink_interval != 0) {
     if (currentMillis - previousMillis >= color.blink_interval) {
       previousMillis = currentMillis;
+      blinkState = !blinkState;
     }
-    blinkState = !blinkState;
     if (blinkState == LOW) {
       color = Colors::OFF;
     }
@@ -140,7 +140,10 @@ void loop() {
 
   uint8_t pairing_state = digitalRead(PAIRING_PIN);
   // just hold button down
-  if (!pairing_state) {
+  if (!pairing_state && !pairing_done) {
+    uint8_t syncwords[] = { 0x2d, 0x64 };
+    rf69.setSyncWords(syncwords, sizeof(syncwords));
+    Serial.println("pairing");
     if (rf69.available()) {
       uint8_t buf[sizeof(data)];
       uint8_t len = sizeof(buf);
@@ -156,7 +159,10 @@ void loop() {
         }
         state = normal;
         rf69.setSyncWords(data.syncwords, sizeof(data.syncwords));
+        Serial.print(data.syncwords[0]);
       }
+      pairing_done=true;
+      Serial.println("Paired!");
     }
     rgb_color(Colors::BLUE_BLINK);
   }
@@ -181,6 +187,7 @@ void loop() {
         // https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/
         devices[deviceId] = std::make_pair(!(data.button_state), millis());
       }
+      Serial.println(data.button_state);
     }
 
     unsigned long timestamp = millis();
@@ -193,14 +200,16 @@ void loop() {
       }
     }
 
-    bool buzz = false;
-    for (auto& device : devices) {
-      if (device.second.first) {
-        buzz = true;
-      }
-    }
-
-    digitalWrite(MOTOR_PIN, buzz ? HIGH : LOW);
+//    bool buzz = false;
+//    for (auto& device : devices) {
+//      if (device.second.first) {
+//        buzz = true;
+//      }
+//    }
+//    Serial.print("Buzz: ");
+//    Serial.println(buzz);
+//
+//    digitalWrite(MOTOR_PIN, buzz ? HIGH : LOW);
 
   }
 }
