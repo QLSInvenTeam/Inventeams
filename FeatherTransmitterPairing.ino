@@ -1,15 +1,11 @@
-#include <SPI.h>
+#include <FlashStorage.h>
 #include <RH_RF69.h>
-
+#include <PinButton.h>
 #include <array>
 
 #define RF69_FREQ 915.0
 
 #define VBATPIN A7
-float vbatm = 0;
-uint8_t syncwords[4];
-bool pairing_done = false;
-
 #define THRESHOLD_VOLTAGE 3.7
 
 #define UUID_LEN 16
@@ -18,10 +14,10 @@ bool pairing_done = false;
 #define GREEN_PIN A2
 #define BLUE_PIN A3
 
-#define BUTTON_PIN 12
-#define PAIRING_PIN 13
+#define BUTTON_PIN 10
+#define PAIRING_PIN 12
 
-#define RAND_DELAY MIN 10
+#define RAND_DELAY_MIN 10
 #define RAND_DELAY_MAX 20
 
 #define KEY_MIN 0
@@ -33,20 +29,47 @@ bool pairing_done = false;
 #define RFM69_RST     4
 #endif
 
-
+PinButton pairing_pin(PAIRING_PIN);
 
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
-uint8_t buf[RH_RF69_MAX_MESSAGE_LEN];
 
-typedef struct {
-  int r;
-  int g;
-  int b;
-} Color;
+FlashStorage(syncwords_storage, uint32_t);
+
+const uint8_t defaultwords[] = { 0x2d, 0x64, 0x64, 0x64 };
+
+/*
+  normal: normal operation
+  pair_listen: listen from other transmitters
+  pair_transmit: transmit your syncwords
+*/
+enum _state { normal, pair_listen, pair_transmit };
+_state state;
+
+struct packet {
+  uint8_t syncwords[4];
+  uint8_t deviceId[16];
+  bool button_state;
+};
+
+packet data;
+
+struct Color {
+  uint8_t r;
+  uint8_t g;
+  uint8_t b;
+  uint16_t blink_interval;
+};
 
 namespace Colors {
-Color RED = {255, 0, 0};
-Color GREEN = {0, 255, 0};
+Color const RED         = {255,   0,   0,   0};
+Color const GREEN       = {  0, 255,   0,   0};
+Color const BLUE        = {  0,   0, 255,   0};
+
+Color const RED_BLINK   = {255,   0,   0, 200};
+Color const GREEN_BLINK = {  0, 255,   0, 200};
+Color const BLUE_BLINK  = {  0,   0, 255, 200};
+
+Color const OFF         = {  0,   0,   0,   0};
 }
 
 typedef std::array<uint8_t, UUID_LEN> uuid;
@@ -66,7 +89,6 @@ uuid getChipID() {
   uint32_t orig[4] = {val1, val2, val3, val4};
 
   //https://stackoverflow.com/questions/6499183/converting-a-uint32-value-into-a-uint8-array4
-  //  no clue if this works but yeah
   for (int i = 0; i < 4; i++) {
     uint8_t *origp = (uint8_t *)&orig[i];
     for (int j = 0; j < 4; j++) {
@@ -76,21 +98,29 @@ uuid getChipID() {
   return chipId;
 }
 
-uuid UUID = getChipID();
-
-
 void rgb_color(Color color) {
+  static unsigned long previousMillis = 0;
+  static bool blinkState = HIGH;
+
+  unsigned long currentMillis = millis();
+
+  if (color.blink_interval) {
+    if (currentMillis - previousMillis >= color.blink_interval) {
+      previousMillis = currentMillis;
+      blinkState = !blinkState;
+    }
+    if (blinkState == LOW) {
+      color = Colors::OFF;
+    }
+  }
+
   analogWrite(RED_PIN, color.r);
   analogWrite(GREEN_PIN, color.g);
   analogWrite(BLUE_PIN, color.b);
 }
 
 float get_voltage() {
-  float measuredvbat = analogRead(VBATPIN);
-  measuredvbat *= 2;
-  measuredvbat *= 3.3;
-  measuredvbat /= 1024;
-  return measuredvbat;
+  return analogRead(VBATPIN) * 2 * 3.3 / 1024;
 }
 
 boolean debounce() {
@@ -99,43 +129,46 @@ boolean debounce() {
   return debounced_state;
 }
 
-void set_data(uint8_t data[], int len) {
-  for (int i = 0; i < len; i++) {
-    buf[UUID_LEN + i] = data[i];
-  }
+void random_delay() {
+  delay(random(RAND_DELAY_MIN, RAND_DELAY_MAX));
 }
 
-void random_delay() {
-  int duration = random(RAND_DELAY_MIN, RAND_DELAY_MAX);
-  delay(duration);
+uint32_t u32from8(uint8_t b[4]) {
+  uint32_t u;
+  u = b[0];
+  u = (u  << 8) + b[1];
+  u = (u  << 8) + b[2];
+  u = (u  << 8) + b[3];
+  return u;
 }
-void generate_key() {
-   int first = random(KEY_MIN, KEY_MAX);
-   int second = random(KEY_MIN, KEY_MAX);
-   int third = random(KEY_MIN, KEY_MAX);
-   int fourth = random(KEY_MIN, KEY_MAX);
-   syncwords = {first, second, third, fourth};
-   rf69.setSyncWords(syncwords, sizeof(syncwords));
+
+void u8from32 (uint8_t b[4], uint32_t u32) {
+  b[3] = (uint8_t)u32;
+  b[2] = (uint8_t)(u32 >>= 8);
+  b[1] = (uint8_t)(u32 >>= 8);
+  b[0] = (uint8_t)(u32 >>= 8);
 }
-void clearsyncwords() {
-   for(int i=0; i<4; i++) {
-      buf[UUID_LEN + i] = 0; 
-   }
+
+uint32_t generate_syncwords() {
+  uint8_t newwords[4];
+  for (int i = 0; i < 4; i++) {
+    newwords[i] = random(KEY_MIN, KEY_MAX);
+  }
+  return u32from8(newwords);
 }
-void setup()
-{
+
+void setup() {
+  Serial.begin(115200);
 
   randomSeed(analogRead(A0));
-  
+
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(PAIRING_PIN, INPUT_PULLUP);
-  Serial.begin(115200);
 
   pinMode(RED_PIN, OUTPUT);
   pinMode(BLUE_PIN, OUTPUT);
   pinMode(GREEN_PIN, OUTPUT);
 
-  pinMode(LED_BUILTIN, OUTPUT);
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
 
@@ -161,43 +194,115 @@ void setup()
 
   rf69.setEncryptionKey(key);
 
-  for (int i = 0; i < UUID_LEN + 4; i++) {
-    //    Load UUID into buf
-    buf[i] = UUID[i];
+  uuid UUID = getChipID();
+  for (int i = 0; i < UUID_LEN; i++) {
+    data.deviceId[i] = UUID[i];
+  }
+
+  uint32_t oldwords = syncwords_storage.read();
+  // Load previous words if they exist
+  if (oldwords != 0) {
+    storeSyncWords(oldwords, false);
+  } else {
+    uint32_t newwords = generate_syncwords();
+    storeSyncWords(newwords, true);
+  }
+  enterNormal();
+}
+
+void storeSyncWords(uint32_t newwords, boolean store) {
+  uint8_t words8[4];
+  u8from32(words8, newwords);
+  for (int i = 0; i < 4; i++) {
+    data.syncwords[i] = words8[i];
+  }
+  if (store) {
+    syncwords_storage.write(newwords);
   }
 }
 
+void enterPairTransmit() {
+  state = pair_transmit;
+  rf69.setSyncWords(defaultwords, sizeof(defaultwords));
+}
+
+void enterNormal() {
+  state = normal;
+  rf69.setSyncWords(data.syncwords, sizeof(data.syncwords));
+}
+
+void enterPairListen() {
+  state = pair_listen;
+  rf69.setSyncWords(defaultwords, sizeof(defaultwords));
+}
+
 void loop() {
-  vbatm = get_voltage();
-  Serial.print("Voltage: ");
-  Serial.println(vbatm);
+  float vbatm = get_voltage();
+  //  Serial.print("Voltage: ");
+  //  Serial.println(vbatm);
 
-  rgb_color(
-    vbatm < THRESHOLD_VOLTAGE ?
-    Colors::RED
-    :
-    Colors::GREEN
-  );
-  uint8_t pairing_state = digitalRead(BUTTON_PIN);
-  if(!pairing_state && !pairing_done) {
-     for(int i=0; i<4; i++) {
-         buf[UUID_LEN + i] = syncwords[i]; 
-     }
-     for(int i=0; i<80; i++) {
-        rf69.send(buf, sizeof(buf));
-        random_delay();
-     }
-    pairing_done = true;
-    clearsyncwords();
+  pairing_pin.update();
+  if (pairing_pin.isSingleClick()) {
+    if (state == pair_transmit || state == pair_listen) {
+      enterNormal();
+    } else {
+      enterPairTransmit();
+    }
   }
-  else {
-    uint8_t button_state = debounce();
-    Serial.println("Button State:");
-    Serial.println(button_state);
-    uint8_t data[] = {button_state};
-    set_data(data, 1);
 
+  if (pairing_pin.isDoubleClick()) {
+    enterPairListen();
+  }
+
+  if (state == pair_transmit) {
+    uint8_t buf[sizeof(data)];
+    memcpy(buf, &data, sizeof(data));
     rf69.send(buf, sizeof(buf));
-    random_delay();
+    Serial.println("Packet sent");
+    rgb_color(Colors::GREEN_BLINK);
   }
+
+  if (state == pair_listen) {
+    Serial.println("Pair_listen");
+    if (rf69.available()) {
+      Serial.println("Packet recieved");
+
+      uint8_t buf[sizeof(data)];
+      uint8_t len = sizeof(buf);
+      packet recv;
+
+      if (rf69.recv(buf, &len)) {
+        if (!len) return;
+        memcpy(&recv, buf, sizeof(data));
+        storeSyncWords(u32from8(recv.syncwords), true);
+        for (int i = 0; i < 3; i++) {
+          rgb_color(Colors::GREEN);
+          delay(500);
+          rgb_color(Colors::OFF);
+          delay(500);
+        }
+        enterNormal();
+      }
+    }
+    rgb_color(Colors::BLUE_BLINK);
+  }
+
+  if (state == normal) {
+    data.button_state = debounce();
+    //    Serial.println("Button State:");
+    //    Serial.println(data.button_state);
+    uint8_t buf[sizeof(data)];
+    memcpy(buf, &data, sizeof(data));
+    rf69.send(buf, sizeof(buf));
+
+    rgb_color(
+      vbatm < THRESHOLD_VOLTAGE ?
+      Colors::RED
+      :
+      Colors::GREEN
+    );
+  }
+
+
+  random_delay();
 }
