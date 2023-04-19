@@ -19,7 +19,7 @@ bool pairing_done = false;
 #define UUID_LEN 16
 
 #define MOTOR_PIN 18
-#define PAIRING_PIN 13
+#define PAIRING_PIN 12
 
 #if defined(ADAFRUIT_FEATHER_M0) || defined(ADAFRUIT_FEATHER_M0_EXPRESS) || defined(ARDUINO_SAMD_FEATHER_M0)
 #define RFM69_CS      8
@@ -154,6 +154,7 @@ void setup() {
   uint32_t oldwords = syncwords_storage.read();
   // Load previous words if they exist
   if (oldwords != 0) {
+    Serial.println(oldwords);
     storeSyncWords(oldwords, false);
   }
 }
@@ -166,6 +167,7 @@ void loop() {
   uint8_t pairing_state = digitalRead(PAIRING_PIN);
   // just hold button down
   if (!pairing_state) {
+    rgb_color(Colors::BLUE_BLINK);
     uint8_t syncwords[] = { 0x2d, 0x64, 0x64, 0x64 };
     rf69.setSyncWords(syncwords, sizeof(syncwords));
     Serial.println("pairing");
@@ -187,7 +189,6 @@ void loop() {
       }
       Serial.println("Paired!");
     }
-    rgb_color(Colors::BLUE_BLINK);
   }
   else {
     // normal operation
