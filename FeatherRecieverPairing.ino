@@ -10,7 +10,7 @@
 bool pairing_done = false;
 #define THRESHOLD_VOLTAGE 3.0
 
-#define DISCONNECT_TIMEOUT 2000
+#define DISCONNECT_TIMEOUT 500
 
 #define RED_PIN A1
 #define GREEN_PIN A2
@@ -104,7 +104,7 @@ void storeSyncWords(uint32_t newwords, boolean store) {
   uint8_t words8[4];
   u8from32(words8, newwords);
   for (int i = 0; i < 4; i++) {
-    syncwords[i] = words8[i];
+    data.syncwords[i] = words8[i];
   }
   if (store) {
     syncwords_storage.write(newwords);
@@ -156,6 +156,7 @@ void setup() {
   if (oldwords != 0) {
     Serial.println(oldwords);
     storeSyncWords(oldwords, false);
+    rf69.setSyncWords(data.syncwords, sizeof(data.syncwords));
   }
 }
 
@@ -163,7 +164,7 @@ void loop() {
   float vbatm = get_voltage();
   //  Serial.print("Voltage: ");
   //  Serial.println(vbatm);
-
+  Serial.println(syncwords_storage.read());
   uint8_t pairing_state = digitalRead(PAIRING_PIN);
   // just hold button down
   if (!pairing_state) {
@@ -185,6 +186,7 @@ void loop() {
           delay(500);
         }
         storeSyncWords(u32from8(data.syncwords), true);
+//        Serial.println(u32from8(data.syncwords));
         rf69.setSyncWords(data.syncwords, sizeof(data.syncwords));
       }
       Serial.println("Paired!");
@@ -211,7 +213,7 @@ void loop() {
         // https://www.norwegiancreations.com/2018/10/arduino-tutorial-avoiding-the-overflow-issue-when-using-millis-and-micros/
         devices[deviceId] = std::make_pair(!(data.button_state), millis());
       }
-      Serial.println(data.button_state);
+//      Serial.println(data.button_state);
     }
 
     unsigned long timestamp = millis();
@@ -230,8 +232,12 @@ void loop() {
         buzz = true;
       }
     }
-    Serial.print("Buzz: ");
-    Serial.println(buzz);
+//    Serial.print("Buzz: ");
+//    Serial.println(buzz);
+    for(int i=0; i<4; i++) {
+      Serial.println(data.syncwords[i]);
+    }
+    Serial.println(u32from8(data.syncwords));
 
     digitalWrite(MOTOR_PIN, buzz ? HIGH : LOW);
   }
